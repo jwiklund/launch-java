@@ -1,4 +1,4 @@
-package com.spotify.launch_java;
+package so.born.launch_java;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
