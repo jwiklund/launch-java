@@ -1,12 +1,15 @@
 package com.spotify.launch_java;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.io.CharSource;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
@@ -15,7 +18,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -37,16 +42,24 @@ public class LaunchJava {
     this.compiler = compiler;
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
+    if (args.length == 0) {
+      System.out.println("Script to run is requred");
+      System.exit(1);
+    }
     Stopwatch sw = Stopwatch.createStarted();
+    List<String> lines = Files.asCharSource(new File(args[0]), Charsets.UTF_8)
+        .readLines()
+        .stream()
+        .filter(l -> !l.startsWith("#"))
+        .collect(Collectors.toList());
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {
       System.out.println("Could not find java compiler, launcher needs jdk");
       System.exit(1);
     }
-
     LaunchJava launcher = new LaunchJava(compiler);
-    launcher.run("System.out.println(\"Hello\");", args);
+    launcher.run(Joiner.on('\n').join(lines), args);
     System.out.printf("time %d\n", sw.elapsed(TimeUnit.MILLISECONDS));
   }
 
